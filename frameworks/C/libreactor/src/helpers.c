@@ -85,7 +85,10 @@ void json(server_context *context, clo *json_object)
 
 void enable_reuseport_cbpf(server *s)
 {
-  struct sock_filter code[] = {{BPF_LD | BPF_W | BPF_ABS, 0, 0, SKF_AD_OFF + SKF_AD_CPU}, {BPF_RET | BPF_A, 0, 0, 0}};
+  struct sock_filter code[] = {
+	  {BPF_LD | BPF_W | BPF_ABS, 0, 0, SKF_AD_OFF + SKF_AD_CPU},
+	  {BPF_ALU | BPF_K | BPF_SUB, 0, 0, 1},
+	  {BPF_RET | BPF_A, 0, 0, 0}};
   struct sock_fprog prog = { .len = sizeof(code)/sizeof(code[0]), .filter = code };
   int e;
 
