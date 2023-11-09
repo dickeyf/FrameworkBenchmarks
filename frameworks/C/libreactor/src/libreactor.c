@@ -41,10 +41,25 @@ static core_status server_handler(core_event *event)
   }
 }
 
-int main()
+int main(int argc, char **argv)
 {
   int parent_eventfd;
   server s;
+
+  int reuseport_cbpf_enabled = 0;
+  int c;
+  while ((c = getopt (argc, argv, "c")) != -1)
+  {
+    switch(c)
+    {
+    case 'c':
+      reuseport_cbpf_enabled = 1;
+      break;
+    default:
+      printf("Only supported argument is -c to enable reuseport_cbpf\n");
+      return;
+    }
+  }
 
   // fork_workers() forks a separate child/worker process for each available cpu and returns an eventfd from the parent
   // The eventfd is used to signal the parent. This guarantees the forking order needed for REUSEPORT_CBPF to work well
@@ -53,7 +68,15 @@ int main()
   core_construct(NULL);
   server_construct(&s, server_handler, &s);
   server_open(&s, 0, 8080);
-  enable_reuseport_cbpf(&s);
+  if (reuseport_cbpf_enabled==1)
+  {
+    printf("Running with reuseport_cbpf\n");
+    enable_reuseport_cbpf(&s);
+  }
+  else
+  {
+    printf("Running without reuseport_cbpf\n");
+  }
 
   // Signal the parent process so that it can proceed with the next fork
   eventfd_write(parent_eventfd, (eventfd_t) 1);
@@ -62,3 +85,4 @@ int main()
   core_loop(NULL);
   core_destruct(NULL);
 }
+

@@ -46,4 +46,4 @@ USER libreactor
 
 EXPOSE 8080
 
-CMD ["./libreactor"]
+CMD ["./libreactor", "-c"]
